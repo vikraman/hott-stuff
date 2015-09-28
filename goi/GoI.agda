@@ -7,58 +7,67 @@ open import Data.Unit
 open import Data.Sum
 open import Data.Empty
 
-data R {ℓ₁ ℓ₂} : Set ℓ₁ → Set ℓ₂ → Set (suc (ℓ₁ ⊔ ℓ₂)) where
-     r : {i : Set ℓ₁} {o : Set ℓ₂} → i → (o × R i o) → R i o
+data R {ℓ} (i : Set ℓ) : Set ℓ → Set (suc ℓ) where
+     idᵣ : R i i
+     r : {o : Set ℓ} → i → (o × R i o) → R i o
 
-{-# NON_TERMINATING #-}
-id : ∀ {ℓ} {A : Set ℓ} {a : A} → R A A
-id {ℓ} {A} {a} = r a (a , id {ℓ} {A} {a})
+R-elim : ∀ {ℓ} {i o : Set ℓ} → R i o → i → (o × R i o)
+R-elim idᵣ x = x , idᵣ
+R-elim (r x (y , f')) v = y , f'
 
-_>>_ : ∀ {ℓ₁ ℓ₂ ℓ₃} {A : Set ℓ₁} {B : Set ℓ₂} {C : Set ℓ₃}
-     → R A B → R B C → R A C
-r x (y , f') >> r z (w , g') = r x (w , f' >> g')
+id-R : ∀ {ℓ} {A : Set ℓ} → R A A
+id-R {ℓ} {A} = idᵣ
 
-_**_ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Set ℓ₁} {B : Set ℓ₂} {C : Set ℓ₃} {D : Set ℓ₄}
-     → R A B → R C D → R (A ⊎ C) (B ⊎ D)
+_>>_ : ∀ {ℓ} {A B C : Set ℓ} → R A B → R B C → R A C
+f >> idᵣ = f
+idᵣ >> g = g
+r x (y , f') >> r z (w , g') = f' >> g'
+
+_**_ : ∀ {ℓ₁ ℓ₂} {A B : Set ℓ₁} {C D : Set ℓ₂} → R A B → R C D → R (A ⊎ C) (B ⊎ D)
+idᵣ ** idᵣ = idᵣ
+idᵣ ** r x (y , f') = r (inj₂ x) ((inj₂ y) , idᵣ ** f')
+r x (y , f') ** idᵣ = r (inj₁ x) ((inj₁ y) , (f' ** idᵣ))
 r x (y , f') ** r z (w , g') = r (inj₁ x) (inj₁ y , f' ** g')
 
-trace : ∀ {ℓ₁ ℓ₂ ℓ₃} {A : Set ℓ₁} {B : Set ℓ₂} {C : Set ℓ₃}
-      → R (A ⊎ B) (C ⊎ B) → R A C
-trace (r (inj₁ x) (proj₁ , proj₂)) = r x ({!!} , {!!})
-trace (r (inj₂ y) (proj₁ , proj₂)) = r {!!} ({!!} , {!!})
-
-loop : ∀ {ℓ₁ ℓ₂ ℓ₃} {A : Set ℓ₁} {B : Set ℓ₂} {C : Set ℓ₃}
-     → R (A ⊎ B) (A ⊎ C) → A ⊎ B → C × R B C
-loop (r x (inj₁ x₁ , f')) (inj₁ x₂) = proj₁ (loop f' x) , {!!}
-loop (r x (inj₂ y , f')) (inj₁ x₁) = y , {!!}
-loop (r x (y , f')) (inj₂ y₁) = proj₁ (loop f' x) , {!!}
+trace : ∀ {ℓ} {A B C : Set ℓ} {a : A} → R (A ⊎ B) (C ⊎ B) → R A C
+{-# NON_TERMINATING #-}
+loop : ∀ {ℓ} {A B C : Set ℓ} {a : A} → R (A ⊎ B) (C ⊎ B) → A ⊎ B → C × R A C
+trace {a = a} f = r a (loop {a = a} f (inj₁ a))
+loop f v with R-elim f v
+loop {a = a} f v | inj₁ x , f' = x , trace {a = a} f'
+loop {a = a} f v | inj₂ y , f' = loop {a = a} f' (inj₂ y)
 
 {-# NON_TERMINATING #-}
-R-sym : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} {B : Set ℓ₂} {a : A} {b : B} → R (A ⊎ B) (B ⊎ A)
-R-sym {ℓ₁} {ℓ₂} {A} {B} {a} {b} = r (inj₁ a) (inj₁ b , R-sym {ℓ₁} {ℓ₂} {A} {B} {a} {b})
+R-sym : ∀ {ℓ} {A B : Set ℓ} {ab : A ⊎ B} → R (A ⊎ B) (B ⊎ A)
+R-sym {ab = inj₁ a} = r (inj₁ a) ((inj₂ a) , R-sym {ab = inj₁ a})
+R-sym {ab = inj₂ b} = r (inj₂ b) ((inj₁ b) , R-sym {ab = inj₂ b})
 
 {-# NON_TERMINATING #-}
-ρ : ∀ {ℓ} {A : Set ℓ} {a : A} → R (A ⊎ ⊥) A
-ρ {ℓ} {A} {a} = r (inj₁ a) (a , ρ {ℓ} {A} {a})
+ρ : ∀ {ℓ} {A : Set ℓ} {ab : A ⊎ ⊥} → R (A ⊎ ⊥) A
+ρ {ab = inj₁ a} = r (inj₁ a) (a , ρ {ab = inj₁ a})
+ρ {ab = inj₂ b} = r (inj₂ b) (⊥-elim b , ρ {ab = inj₂ b})
 
 {-# NON_TERMINATING #-}
 ρ' : ∀ {ℓ} {A : Set ℓ} {a : A} → R A (A ⊎ ⊥)
-ρ' {ℓ} {A} {a} = r a (inj₁ a , ρ' {ℓ} {A} {a})
+ρ' {a = a} = r a ((inj₁ a) , ρ' {a = a})
 
 {-# NON_TERMINATING #-}
-Λ : ∀ {ℓ} {A : Set ℓ} {a : A} → R (⊥ ⊎ A) A
-Λ {ℓ} {A} {a} = r (inj₂ a) (a , Λ {ℓ} {A} {a})
+Λ : ∀ {ℓ} {A : Set ℓ} {ab : ⊥ ⊎ A} → R (⊥ ⊎ A) A
+Λ {ab = inj₁ a} = r (inj₁ a) ((⊥-elim a) , Λ {ab = inj₁ a})
+Λ {ab = inj₂ b} = r (inj₂ b) (b , Λ {ab = inj₂ b})
 
 {-# NON_TERMINATING #-}
 Λ' : ∀ {ℓ} {A : Set ℓ} {a : A} → R A (⊥ ⊎ A)
-Λ' {ℓ} {A} {a} = r a ((inj₂ a) , Λ' {ℓ} {A} {a})
+Λ' {a = a} = r a ((inj₂ a) , Λ' {a = a})
 
 {-# NON_TERMINATING #-}
-α : ∀ {ℓ₁ ℓ₂ ℓ₃} {A : Set ℓ₁} {B : Set ℓ₂} {C : Set ℓ₃} {a : A} {b : B} {c : C}
-  → R ((A ⊎ B) ⊎ C) (A ⊎ (B ⊎ C))
-α {ℓ₁} {ℓ₂} {ℓ₃} {A} {B} {C} {a} {b} {c} = r (inj₂ c) ((inj₁ a) , α {ℓ₁} {ℓ₂} {ℓ₃} {A} {B} {C} {a} {b} {c})
+α : ∀ {ℓ} {A B C : Set ℓ} {abc : ((A ⊎ B) ⊎ C)} → R ((A ⊎ B) ⊎ C) (A ⊎ (B ⊎ C))
+α {abc = inj₁ (inj₁ a)} = r (inj₁ (inj₁ a)) ((inj₁ a) , α {abc = inj₁ (inj₁ a)})
+α {abc = inj₁ (inj₂ b)} = r (inj₁ (inj₂ b)) ((inj₂ (inj₁ b)) , (α {abc = inj₁ (inj₂ b)}))
+α {abc = inj₂ c} = r (inj₂ c) ((inj₂ (inj₂ c)) , α {abc = inj₂ c})
 
 {-# NON_TERMINATING #-}
-α' : ∀ {ℓ₁ ℓ₂ ℓ₃} {A : Set ℓ₁} {B : Set ℓ₂} {C : Set ℓ₃} {a : A} {b : B} {c : C}
-  → R (A ⊎ (B ⊎ C)) ((A ⊎ B) ⊎ C)
-α' {ℓ₁} {ℓ₂} {ℓ₃} {A} {B} {C} {a} {b} {c} = r (inj₁ a) ((inj₂ c) , α' {ℓ₁} {ℓ₂} {ℓ₃} {A} {B} {C} {a} {b} {c})
+α' : ∀ {ℓ} {A B C : Set ℓ} {abc : (A ⊎ (B ⊎ C))} → R (A ⊎ (B ⊎ C)) ((A ⊎ B) ⊎ C)
+α' {abc = inj₁ a} = r (inj₁ a) ((inj₁ (inj₁ a)) , α' {abc = inj₁ a})
+α' {abc = inj₂ (inj₁ b)} = r (inj₂ (inj₁ b)) ((inj₁ (inj₂ b)) , (α' {abc = inj₂ (inj₁ b)}))
+α' {abc = inj₂ (inj₂ c)} = r (inj₂ (inj₂ c)) ((inj₂ c) , (α' {abc = inj₂ (inj₂ c)}))
