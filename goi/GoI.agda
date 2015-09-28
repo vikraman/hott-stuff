@@ -23,11 +23,15 @@ f >> idᵣ = f
 idᵣ >> g = g
 r x (y , f') >> r z (w , g') = f' >> g'
 
+infixl 5 _>>_
+
 _**_ : ∀ {ℓ₁ ℓ₂} {A B : Set ℓ₁} {C D : Set ℓ₂} → R A B → R C D → R (A ⊎ C) (B ⊎ D)
 idᵣ ** idᵣ = idᵣ
 idᵣ ** r x (y , f') = r (inj₂ x) ((inj₂ y) , idᵣ ** f')
 r x (y , f') ** idᵣ = r (inj₁ x) ((inj₁ y) , (f' ** idᵣ))
 r x (y , f') ** r z (w , g') = r (inj₁ x) (inj₁ y , f' ** g')
+
+infixl 6 _**_
 
 trace : ∀ {ℓ} {A B C : Set ℓ} {a : A} → R (A ⊎ B) (C ⊎ B) → R A C
 {-# NON_TERMINATING #-}
@@ -71,3 +75,30 @@ R-sym {ab = inj₂ b} = r (inj₂ b) ((inj₁ b) , R-sym {ab = inj₂ b})
 α' {abc = inj₁ a} = r (inj₁ a) ((inj₁ (inj₁ a)) , α' {abc = inj₁ a})
 α' {abc = inj₂ (inj₁ b)} = r (inj₂ (inj₁ b)) ((inj₁ (inj₂ b)) , (α' {abc = inj₂ (inj₁ b)}))
 α' {abc = inj₂ (inj₂ c)} = r (inj₂ (inj₂ c)) ((inj₂ c) , (α' {abc = inj₂ (inj₂ c)}))
+
+data G {ℓ} (A⁺ A⁻ B⁺ B⁻ : Set ℓ) : Set (suc ℓ) where
+     g : R (A⁺ ⊎ B⁻) (A⁻ ⊎ B⁺) → G A⁺ A⁻ B⁺ B⁻
+
+id-G : ∀ {ℓ} {A : Set ℓ} → G A A A A
+id-G {ℓ} {A} = g id-R
+
+{-# NON_TERMINATING #-}
+assoc : ∀ {ℓ} {A⁺ B⁺ B⁻ C⁻ : Set ℓ} {e : ((A⁺ ⊎ C⁻) ⊎ (B⁻ ⊎ B⁺))}
+      → R ((A⁺ ⊎ C⁻) ⊎ (B⁻ ⊎ B⁺)) ((A⁺ ⊎ B⁻) ⊎ (B⁺ ⊎ C⁻))
+assoc {e = inj₁ (inj₁ a⁺)} = r (inj₁ (inj₁ a⁺)) ((inj₁ (inj₁ a⁺)) , assoc {e = inj₁ (inj₁ a⁺)})
+assoc {e = inj₁ (inj₂ c⁻)} = r (inj₁ (inj₂ c⁻)) ((inj₂ (inj₂ c⁻)) , assoc {e = inj₁ (inj₂ c⁻)})
+assoc {e = inj₂ (inj₁ b⁻)} = r (inj₂ (inj₁ b⁻)) ((inj₁ (inj₂ b⁻)) , assoc {e = inj₂ (inj₁ b⁻)})
+assoc {e = inj₂ (inj₂ b⁺)} = r (inj₂ (inj₂ b⁺)) ((inj₂ (inj₁ b⁺)) , assoc {e = inj₂ (inj₂ b⁺)})
+
+{-# NON_TERMINATING #-}
+assoc2 : ∀ {ℓ} {A⁻ B⁺ B⁻ C⁺ : Set ℓ} {e : ((A⁻ ⊎ B⁺) ⊎ (B⁻ ⊎ C⁺))}
+       → R ((A⁻ ⊎ B⁺) ⊎ (B⁻ ⊎ C⁺)) ((A⁻ ⊎ C⁺) ⊎ (B⁻ ⊎ B⁺))
+assoc2 {e = inj₁ (inj₁ a⁻)} = r (inj₁ (inj₁ a⁻)) ((inj₁ (inj₁ a⁻)) , assoc2 {e = inj₁ (inj₁ a⁻)})
+assoc2 {e = inj₁ (inj₂ b⁺)} = r (inj₁ (inj₂ b⁺)) ((inj₂ (inj₂ b⁺)) , assoc2 {e = inj₁ (inj₂ b⁺)})
+assoc2 {e = inj₂ (inj₁ b⁻)} = r (inj₂ (inj₁ b⁻)) ((inj₂ (inj₁ b⁻)) , assoc2 {e = inj₂ (inj₁ b⁻)})
+assoc2 {e = inj₂ (inj₂ c⁺)} = r (inj₂ (inj₂ c⁺)) ((inj₁ (inj₂ c⁺)) , assoc2 {e = inj₂ (inj₂ c⁺)})
+
+_>>>_ : ∀ {ℓ} {A B C D E F : Set ℓ} → G A B C D → G C D E F → G A B E F
+(g f') >>> (g g') = g (trace {a = {!!}} (assoc {e = {!!}} >> f' ** g' >> assoc2 {e = {!!}}))
+
+infixl 4 _>>>_
