@@ -2,7 +2,7 @@ module GoI where
 
 open import Level
 
-open import Data.Product hiding (swap)
+open import Data.Product
 open import Data.Unit
 open import Data.Sum
 open import Data.Empty
@@ -122,16 +122,38 @@ _+_ : ∀ {ℓ} {A' B' C' D' E' F' G' H' : Set ℓ} {e : (A' ⊎ E') ⊎ (D' ⊎
     → G A' B' C' D' → G E' F' G' H' → G (A' ⊎ E') (B' ⊎ F') (C' ⊎ G') (D' ⊎ H')
 _+_ {e = e} {e' = e'} (g f') (g g') = g (β {e = e} >> f' ** g' >> β' {e = e'})
 
+infixl 3 _+_
+
 {-# NON_TERMINATING #-}
 dual : ∀ {ℓ} {A B C D : Set ℓ} {e : A ⊎ D} → R (A ⊎ D) (B ⊎ C) → R (D ⊎ A) (C ⊎ B)
-dual {e = inj₁ x} f' with R-elim f'
-... | f with f (inj₁ x)
+dual {e = e} f' with R-elim f'
+dual {e = inj₁ x} f' | f with f (inj₁ x)
 ... | inj₁ x₁ , proj₂ = r (inj₂ x) ((inj₂ x₁) , (dual {e = inj₁ x} f'))
 ... | inj₂ y , proj₂ = r (inj₂ x) ((inj₁ y) , (dual {e = inj₁ x} f'))
-dual {e = inj₂ y} f' with R-elim f'
-... | f with f (inj₂ y)
+dual {e = inj₂ y} f' | f with f (inj₂ y)
 ... | inj₁ x , proj₂ = r (inj₁ y) ((inj₂ x) , (dual {e = inj₂ y} f'))
 ... | inj₂ y₁ , proj₂ = r (inj₁ y) ((inj₁ y₁) , (dual {e = inj₂ y} f'))
 
 dualize : ∀ {ℓ} {A B C D : Set ℓ} {e : A ⊎ D} → G A B C D → G D C B A
 dualize {e = e} (g f') = g (dual {e = e} f')
+
+{-# NON_TERMINATING #-}
+R-curry : ∀ {ℓ} {A B C D E F : Set ℓ} {e : (A ⊎ B) ⊎ F}
+        → R ((A ⊎ B) ⊎ F) ((C ⊎ D) ⊎ E) → R (A ⊎ (B ⊎ F)) (C ⊎ (D ⊎ E))
+R-curry {e = e} f' with R-elim f'
+R-curry {e = inj₁ (inj₁ x)} f' | f with f (inj₁ (inj₁ x))
+... | inj₁ (inj₁ x₁) , proj₂ = r (inj₁ x) ((inj₁ x₁) , R-curry {e = inj₁ (inj₁ x)} f')
+... | inj₁ (inj₂ y) , proj₂ = r (inj₁ x) ((inj₂ (inj₁ y)) , (R-curry {e = inj₁ (inj₁ x)} f'))
+... | inj₂ y , proj₂ = r (inj₁ x) ((inj₂ (inj₂ y)) , (R-curry {e = inj₁ (inj₁ x)} f'))
+R-curry {e = inj₁ (inj₂ y)} f' | f with f (inj₁ (inj₂ y))
+... | inj₁ (inj₁ x) , proj₂ = r (inj₂ (inj₁ y)) ((inj₁ x) , (R-curry {e = inj₁ (inj₂ y)} f'))
+... | inj₁ (inj₂ y₁) , proj₂ = r (inj₂ (inj₁ y)) ((inj₂ (inj₁ y₁)) , (R-curry {e = inj₁ (inj₂ y)} f'))
+... | inj₂ y₁ , proj₂ = r (inj₂ (inj₁ y)) ((inj₂ (inj₂ y₁)) , (R-curry {e = inj₁ (inj₂ y)} f'))
+R-curry {e = inj₂ y} f' | f with f (inj₂ y)
+... | inj₁ (inj₁ x) , proj₂ = r (inj₂ (inj₂ y)) ((inj₁ x) , (R-curry {e = inj₂ y} f'))
+... | inj₁ (inj₂ y₁) , proj₂ = r (inj₂ (inj₂ y)) ((inj₂ (inj₁ y₁)) , (R-curry {e = inj₂ y} f'))
+... | inj₂ y₁ , proj₂ = r (inj₂ (inj₂ y)) ((inj₂ (inj₂ y₁)) , (R-curry {e = inj₂ y} f'))
+
+G-curry : ∀ {ℓ} {A B C D E F : Set ℓ} {e : (A ⊎ B) ⊎ F}
+        → G (A ⊎ B) (C ⊎ D) E F → G A C (D ⊎ E) (B ⊎ F)
+G-curry {e = e} (g f) = g (R-curry {e = e} f)
