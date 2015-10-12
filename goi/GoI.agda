@@ -2,7 +2,7 @@ module GoI where
 
 open import Level
 
-open import Data.Product
+open import Data.Product hiding (swap)
 open import Data.Unit
 open import Data.Sum
 open import Data.Empty
@@ -79,8 +79,8 @@ R-sym {ab = inj₂ b} = r (inj₂ b) ((inj₁ b) , R-sym {ab = inj₂ b})
 data G {ℓ} (A⁺ A⁻ B⁺ B⁻ : Set ℓ) : Set (suc ℓ) where
      g : R (A⁺ ⊎ B⁻) (A⁻ ⊎ B⁺) → G A⁺ A⁻ B⁺ B⁻
 
-id-G : ∀ {ℓ} {A : Set ℓ} → G A A A A
-id-G {ℓ} {A} = g id-R
+id-G : ∀ {ℓ} {A B : Set ℓ} {ab : A ⊎ B} → G A B A B
+id-G {ab = ab} = g (R-sym {ab = ab})
 
 {-# NON_TERMINATING #-}
 assoc : ∀ {ℓ} {A⁺ B⁺ B⁻ C⁻ : Set ℓ} {e : ((A⁺ ⊎ C⁻) ⊎ (B⁻ ⊎ B⁺))}
@@ -98,7 +98,40 @@ assoc2 {e = inj₁ (inj₂ b⁺)} = r (inj₁ (inj₂ b⁺)) ((inj₂ (inj₂ b�
 assoc2 {e = inj₂ (inj₁ b⁻)} = r (inj₂ (inj₁ b⁻)) ((inj₂ (inj₁ b⁻)) , assoc2 {e = inj₂ (inj₁ b⁻)})
 assoc2 {e = inj₂ (inj₂ c⁺)} = r (inj₂ (inj₂ c⁺)) ((inj₁ (inj₂ c⁺)) , assoc2 {e = inj₂ (inj₂ c⁺)})
 
-_>>>_ : ∀ {ℓ} {A B C D E F : Set ℓ} → G A B C D → G C D E F → G A B E F
-(g f') >>> (g g') = g (trace {a = {!!}} (assoc {e = {!!}} >> f' ** g' >> assoc2 {e = {!!}}))
+_>>>_ : ∀ {ℓ} {A B C D E F : Set ℓ} {af : A ⊎ F} {e : ((A ⊎ F) ⊎ (D ⊎ C))} {e2 : ((B ⊎ C) ⊎ (D ⊎ E))}
+      → G A B C D → G C D E F → G A B E F
+_>>>_ {af = af} {e = e} {e2 = e2} (g f') (g g') = g (trace {a = af} (assoc {e = e} >> f' ** g' >> assoc2 {e = e2}))
 
 infixl 4 _>>>_
+
+{-# NON_TERMINATING #-}
+β : ∀ {ℓ} {A B C D : Set ℓ} {e : (A ⊎ B) ⊎ (C ⊎ D)} → R ((A ⊎ B) ⊎ (C ⊎ D)) ((A ⊎ C) ⊎ (B ⊎ D))
+β {e = inj₁ (inj₁ a)} = r (inj₁ (inj₁ a)) ((inj₁ (inj₁ a)) , β {e = inj₁ (inj₁ a)})
+β {e = inj₁ (inj₂ b)} = r (inj₁ (inj₂ b)) ((inj₂ (inj₁ b)) , β {e = inj₁ (inj₂ b)})
+β {e = inj₂ (inj₁ c)} = r (inj₂ (inj₁ c)) ((inj₁ (inj₂ c)) , β {e = inj₂ (inj₁ c)})
+β {e = inj₂ (inj₂ d)} = r (inj₂ (inj₂ d)) ((inj₂ (inj₂ d)) , β {e = inj₂ (inj₂ d)})
+
+{-# NON_TERMINATING #-}
+β' : ∀ {ℓ} {A B C D : Set ℓ} {e : (A ⊎ C) ⊎ (B ⊎ D)} → R ((A ⊎ C) ⊎ (B ⊎ D)) ((A ⊎ B) ⊎ (C ⊎ D))
+β' {e = inj₁ (inj₁ a)} = r (inj₁ (inj₁ a)) ((inj₁ (inj₁ a)) , β' {e = inj₁ (inj₁ a)})
+β' {e = inj₁ (inj₂ c)} = r (inj₁ (inj₂ c)) ((inj₂ (inj₁ c)) , β' {e = inj₁ (inj₂ c)})
+β' {e = inj₂ (inj₁ b)} = r (inj₂ (inj₁ b)) ((inj₁ (inj₂ b)) , β' {e = inj₂ (inj₁ b)})
+β' {e = inj₂ (inj₂ d)} = r (inj₂ (inj₂ d)) ((inj₂ (inj₂ d)) , β' {e = inj₂ (inj₂ d)})
+
+_+_ : ∀ {ℓ} {A' B' C' D' E' F' G' H' : Set ℓ} {e : (A' ⊎ E') ⊎ (D' ⊎ H')} {e' : (B' ⊎ C') ⊎ (F' ⊎ G')}
+    → G A' B' C' D' → G E' F' G' H' → G (A' ⊎ E') (B' ⊎ F') (C' ⊎ G') (D' ⊎ H')
+_+_ {e = e} {e' = e'} (g f') (g g') = g (β {e = e} >> f' ** g' >> β' {e = e'})
+
+{-# NON_TERMINATING #-}
+dual : ∀ {ℓ} {A B C D : Set ℓ} {e : A ⊎ D} → R (A ⊎ D) (B ⊎ C) → R (D ⊎ A) (C ⊎ B)
+dual {e = inj₁ x} f' with R-elim f'
+... | f with f (inj₁ x)
+... | inj₁ x₁ , proj₂ = r (inj₂ x) ((inj₂ x₁) , (dual {e = inj₁ x} f'))
+... | inj₂ y , proj₂ = r (inj₂ x) ((inj₁ y) , (dual {e = inj₁ x} f'))
+dual {e = inj₂ y} f' with R-elim f'
+... | f with f (inj₂ y)
+... | inj₁ x , proj₂ = r (inj₁ y) ((inj₂ x) , (dual {e = inj₂ y} f'))
+... | inj₂ y₁ , proj₂ = r (inj₁ y) ((inj₁ y₁) , (dual {e = inj₂ y} f'))
+
+dualize : ∀ {ℓ} {A B C D : Set ℓ} {e : A ⊎ D} → G A B C D → G D C B A
+dualize {e = e} (g f') = g (dual {e = e} f')
