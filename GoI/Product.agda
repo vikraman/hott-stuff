@@ -30,3 +30,15 @@ assoc = r λ { ((a , c') , (b' , b)) → ((a , b') , (b , c')) , assoc }
 {-# NON_TERMINATING #-}
 assoc' : ∀ {ℓ} {A' B B' C : Set ℓ} → R ((A' × B) × (B' × C)) ((A' × C) × (B' × B))
 assoc' = r λ { ((a' , b) , (b' , c)) → ((a' , c) , (b' , b)) , assoc' }
+
+{-# NON_TERMINATING #-}
+R-distrib-l : ∀ {ℓ} {A A' B B' C : Set ℓ} → R (A + B') (A' + B) → R (C × (A + B')) (C × (A' + B))
+R-distrib-l f = r λ { (c , inl a) → (c , (fst (R-elim f (inl a)))) , R-distrib-l f
+                    ; (c , inr b) → (c , (fst (R-elim f (inr b)))) , (R-distrib-l f)
+                    }
+
+{-# NON_TERMINATING #-}
+R-distrib-r : ∀ {ℓ} {A A' B B' C : Set ℓ} → R (A + B') (A' + B) → R ((A + B') × C) ((A' + B) × C)
+R-distrib-r f = r λ { (inl a , c) → (fst (R-elim f (inl a)) , c) , R-distrib-r f
+                    ; (inr b' , c) → (fst (R-elim f (inr b')) , c) , R-distrib-r f
+                    }
