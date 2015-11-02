@@ -3,7 +3,6 @@ module GoI.Product where
 open import GoI.Base
 
 infixl 6 _***_
-{-# NON_TERMINATING #-}
 _***_ : ∀ {ℓ₁ ℓ₂} {A B : Set ℓ₁} {C D : Set ℓ₂} → R A B → R C D → R (A × C) (B × D)
 idᵣ *** idᵣ = idᵣ
 idᵣ *** r g = r λ { (a , c) → (a , fst (g c)) , idᵣ *** (snd (g c)) }
