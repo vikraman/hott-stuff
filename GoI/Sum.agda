@@ -2,18 +2,63 @@ module GoI.Sum where
 
 open import Level
 
-open import Data.Product
 open import Data.Unit
-open import Data.Sum
 open import Data.Empty
+
+infixr 4 _,_
+infixr 2 _×_
+
+record Σ {a b} (A : Set a) (B : A → Set b) : Set (a ⊔ b) where
+  constructor _,_
+  field
+    fst : A
+    snd : B fst
+
+open Σ public
+
+infix 2 Σ-syntax
+
+Σ-syntax : ∀ {a b} (A : Set a) → (A → Set b) → Set (a ⊔ b)
+Σ-syntax = Σ
+
+syntax Σ-syntax A (λ x → B) = Σ[ x ∈ A ] B
+
+_×_ : ∀ {a b} (A : Set a) (B : Set b) → Set (a ⊔ b)
+A × B = Σ[ x ∈ A ] B
+
+×-swap : ∀ {a b} {A : Set a} {B : Set b} → A × B → B × A
+×-swap (fst , snd) = snd , fst
+
+infix 5 _+_
+
+data _+_ {a b} (A : Set a) (B : Set b) : Set (a ⊔ b) where
+     inl : (a : A) → A + B
+     inr : (b : B) → A + B
+
++-swap : ∀ {a b} {A : Set a} {B : Set b} → A + B → B + A
++-swap (inl a) = inr a
++-swap (inr b) = inl b
+
++-assoc-l : ∀ {a b c} {A : Set a} {B : Set b} { C : Set c}
+          → (A + B) + C → A + (B + C)
++-assoc-l (inl (inl a)) = inl a
++-assoc-l (inl (inr b)) = inr (inl b)
++-assoc-l (inr c) = inr (inr c)
+
++-assoc-r : ∀ {a b c} {A : Set a} {B : Set b} { C : Set c}
+          → A + (B + C) → (A + B) + C
++-assoc-r (inl a) = inl (inl a)
++-assoc-r (inr (inl b)) = inl (inr b)
++-assoc-r (inr (inr c)) = inr c
 
 data R {ℓ} (i : Set ℓ) : Set ℓ → Set (suc ℓ) where
      idᵣ : R i i
-     r : {o : Set ℓ} → i → (o × R i o) → R i o
+     r  : {o : Set ℓ} → (i → (o × R i o)) → R i o
+     -- r' : {o : Set ℓ} → (o → (i × R o i)) → R i o
 
 R-elim : ∀ {ℓ} {i o : Set ℓ} → R i o → i → (o × R i o)
 R-elim idᵣ x = x , idᵣ
-R-elim (r x (y , f')) v = y , f'
+R-elim (r f) v = f v
 
 id-R : ∀ {ℓ} {A : Set ℓ} → R A A
 id-R {ℓ} {A} = idᵣ
@@ -21,139 +66,148 @@ id-R {ℓ} {A} = idᵣ
 _>>_ : ∀ {ℓ} {A B C : Set ℓ} → R A B → R B C → R A C
 f >> idᵣ = f
 idᵣ >> g = g
-r x (y , f') >> r z (w , g') = f' >> g'
+r f >> r g = r (λ a → fst (g (fst (f a))) , snd (f a) >> snd (g (fst (f a))))
 
 infixl 5 _>>_
 
-_**_ : ∀ {ℓ₁ ℓ₂} {A B : Set ℓ₁} {C D : Set ℓ₂} → R A B → R C D → R (A ⊎ C) (B ⊎ D)
+{-# NON_TERMINATING #-}
+_**_ : ∀ {ℓ₁ ℓ₂} {A B : Set ℓ₁} {C D : Set ℓ₂} → R A B → R C D → R (A + C) (B + D)
 idᵣ ** idᵣ = idᵣ
-idᵣ ** r x (y , f') = r (inj₂ x) ((inj₂ y) , idᵣ ** f')
-r x (y , f') ** idᵣ = r (inj₁ x) ((inj₁ y) , (f' ** idᵣ))
-r x (y , f') ** r z (w , g') = r (inj₁ x) (inj₁ y , f' ** g')
-
+idᵣ ** r g = r λ { (inl a) → (inl a) , idᵣ ** r g
+                 ; (inr c) → (inr (fst (g c))) , idᵣ ** snd (g c)
+                 }
+r f ** idᵣ = r λ { (inl a) → (inl (fst (f a))) , ((snd (f a)) ** idᵣ)
+                 ; (inr c) → (inr c) , (r f) ** idᵣ
+                 }
+r f ** r g = r λ { (inl a) → (inl (fst (f a))) , ((snd (f a)) ** (r g))
+                 ; (inr c) → (inr (fst (g c))) , ((r f) ** (snd (g c)))
+                 }
 infixl 6 _**_
 
-trace : ∀ {ℓ} {A B C : Set ℓ} {a : A} → R (A ⊎ B) (C ⊎ B) → R A C
+trace : ∀ {ℓ} {A B C : Set ℓ} → R (A + B) (C + B) → R A C
 {-# NON_TERMINATING #-}
-loop : ∀ {ℓ} {A B C : Set ℓ} {a : A} → R (A ⊎ B) (C ⊎ B) → A ⊎ B → C × R A C
-trace {a = a} f = r a (loop {a = a} f (inj₁ a))
+loop : ∀ {ℓ} {A B C : Set ℓ} → R (A + B) (C + B) → A + B → C × R A C
+trace f = r (λ a → loop f (inl a))
 loop f v with R-elim f v
-loop {a = a} f v | inj₁ x , f' = x , trace {a = a} f'
-loop {a = a} f v | inj₂ y , f' = loop {a = a} f' (inj₂ y)
+... | inl c , f' = c , trace f'
+... | inr b , f' = loop f' (inr b)
 
 {-# NON_TERMINATING #-}
-R-sym : ∀ {ℓ} {A B : Set ℓ} {ab : A ⊎ B} → R (A ⊎ B) (B ⊎ A)
-R-sym {ab = inj₁ a} = r (inj₁ a) ((inj₂ a) , R-sym {ab = inj₁ a})
-R-sym {ab = inj₂ b} = r (inj₂ b) ((inj₁ b) , R-sym {ab = inj₂ b})
+R-sym : ∀ {ℓ} {A B : Set ℓ} → R (A + B) (B + A)
+R-sym = r λ { (inl a) → (inr a) , R-sym
+            ; (inr b) → (inl b) , R-sym
+            }
 
 {-# NON_TERMINATING #-}
-ρ : ∀ {ℓ} {A : Set ℓ} {ab : A ⊎ ⊥} → R (A ⊎ ⊥) A
-ρ {ab = inj₁ a} = r (inj₁ a) (a , ρ {ab = inj₁ a})
-ρ {ab = inj₂ b} = r (inj₂ b) (⊥-elim b , ρ {ab = inj₂ b})
+ρ : ∀ {ℓ} {A : Set ℓ} → R (A + ⊥) A
+ρ = r λ { (inl a) → a , ρ
+        ; (inr ⊥) → (⊥-elim ⊥) , ρ
+        }
 
 {-# NON_TERMINATING #-}
-ρ' : ∀ {ℓ} {A : Set ℓ} {a : A} → R A (A ⊎ ⊥)
-ρ' {a = a} = r a ((inj₁ a) , ρ' {a = a})
+ρ' : ∀ {ℓ} {A : Set ℓ} → R A (A + ⊥)
+ρ' = r λ { a → (inl a) , ρ' }
 
 {-# NON_TERMINATING #-}
-Λ : ∀ {ℓ} {A : Set ℓ} {ab : ⊥ ⊎ A} → R (⊥ ⊎ A) A
-Λ {ab = inj₁ a} = r (inj₁ a) ((⊥-elim a) , Λ {ab = inj₁ a})
-Λ {ab = inj₂ b} = r (inj₂ b) (b , Λ {ab = inj₂ b})
+Λ : ∀ {ℓ} {A : Set ℓ} → R (⊥ + A) A
+Λ = r λ { (inl ⊥) → (⊥-elim ⊥) , Λ
+        ; (inr a) → a , Λ
+        }
 
 {-# NON_TERMINATING #-}
-Λ' : ∀ {ℓ} {A : Set ℓ} {a : A} → R A (⊥ ⊎ A)
-Λ' {a = a} = r a ((inj₂ a) , Λ' {a = a})
+Λ' : ∀ {ℓ} {A : Set ℓ} → R A (⊥ + A)
+Λ' = r λ { a → (inr a) , Λ' }
 
 {-# NON_TERMINATING #-}
-α : ∀ {ℓ} {A B C : Set ℓ} {abc : ((A ⊎ B) ⊎ C)} → R ((A ⊎ B) ⊎ C) (A ⊎ (B ⊎ C))
-α {abc = inj₁ (inj₁ a)} = r (inj₁ (inj₁ a)) ((inj₁ a) , α {abc = inj₁ (inj₁ a)})
-α {abc = inj₁ (inj₂ b)} = r (inj₁ (inj₂ b)) ((inj₂ (inj₁ b)) , (α {abc = inj₁ (inj₂ b)}))
-α {abc = inj₂ c} = r (inj₂ c) ((inj₂ (inj₂ c)) , α {abc = inj₂ c})
+α : ∀ {ℓ} {A B C : Set ℓ} → R ((A + B) + C) (A + (B + C))
+α = r λ { (inl (inl a)) → (inl a) , α
+        ; (inl (inr b)) → (inr (inl b)) , α
+        ; (inr b) → (inr (inr b)) , α
+        }
 
 {-# NON_TERMINATING #-}
-α' : ∀ {ℓ} {A B C : Set ℓ} {abc : (A ⊎ (B ⊎ C))} → R (A ⊎ (B ⊎ C)) ((A ⊎ B) ⊎ C)
-α' {abc = inj₁ a} = r (inj₁ a) ((inj₁ (inj₁ a)) , α' {abc = inj₁ a})
-α' {abc = inj₂ (inj₁ b)} = r (inj₂ (inj₁ b)) ((inj₁ (inj₂ b)) , (α' {abc = inj₂ (inj₁ b)}))
-α' {abc = inj₂ (inj₂ c)} = r (inj₂ (inj₂ c)) ((inj₂ c) , (α' {abc = inj₂ (inj₂ c)}))
+α' : ∀ {ℓ} {A B C : Set ℓ} → R (A + (B + C)) ((A + B) + C)
+α' = r λ { (inl a) → (inl (inl a)) , α'
+         ; (inr (inl a)) → (inl (inr a)) , α'
+         ; (inr (inr b)) → (inr b) , α'
+         }
 
-data G {ℓ} (A⁺ A⁻ B⁺ B⁻ : Set ℓ) : Set (suc ℓ) where
-     g : R (A⁺ ⊎ B⁻) (A⁻ ⊎ B⁺) → G A⁺ A⁻ B⁺ B⁻
+data G {ℓ} (A A' B B' : Set ℓ) : Set (suc ℓ) where
+     g : R (A + B') (A' + B) → G A A' B B'
 
-id-G : ∀ {ℓ} {A B : Set ℓ} {ab : A ⊎ B} → G A B A B
-id-G {ab = ab} = g (R-sym {ab = ab})
-
-{-# NON_TERMINATING #-}
-assoc : ∀ {ℓ} {A⁺ B⁺ B⁻ C⁻ : Set ℓ} {e : ((A⁺ ⊎ C⁻) ⊎ (B⁻ ⊎ B⁺))}
-      → R ((A⁺ ⊎ C⁻) ⊎ (B⁻ ⊎ B⁺)) ((A⁺ ⊎ B⁻) ⊎ (B⁺ ⊎ C⁻))
-assoc {e = inj₁ (inj₁ a⁺)} = r (inj₁ (inj₁ a⁺)) ((inj₁ (inj₁ a⁺)) , assoc {e = inj₁ (inj₁ a⁺)})
-assoc {e = inj₁ (inj₂ c⁻)} = r (inj₁ (inj₂ c⁻)) ((inj₂ (inj₂ c⁻)) , assoc {e = inj₁ (inj₂ c⁻)})
-assoc {e = inj₂ (inj₁ b⁻)} = r (inj₂ (inj₁ b⁻)) ((inj₁ (inj₂ b⁻)) , assoc {e = inj₂ (inj₁ b⁻)})
-assoc {e = inj₂ (inj₂ b⁺)} = r (inj₂ (inj₂ b⁺)) ((inj₂ (inj₁ b⁺)) , assoc {e = inj₂ (inj₂ b⁺)})
+id-G : ∀ {ℓ} {A B : Set ℓ} → G A B A B
+id-G = g R-sym
 
 {-# NON_TERMINATING #-}
-assoc2 : ∀ {ℓ} {A⁻ B⁺ B⁻ C⁺ : Set ℓ} {e : ((A⁻ ⊎ B⁺) ⊎ (B⁻ ⊎ C⁺))}
-       → R ((A⁻ ⊎ B⁺) ⊎ (B⁻ ⊎ C⁺)) ((A⁻ ⊎ C⁺) ⊎ (B⁻ ⊎ B⁺))
-assoc2 {e = inj₁ (inj₁ a⁻)} = r (inj₁ (inj₁ a⁻)) ((inj₁ (inj₁ a⁻)) , assoc2 {e = inj₁ (inj₁ a⁻)})
-assoc2 {e = inj₁ (inj₂ b⁺)} = r (inj₁ (inj₂ b⁺)) ((inj₂ (inj₂ b⁺)) , assoc2 {e = inj₁ (inj₂ b⁺)})
-assoc2 {e = inj₂ (inj₁ b⁻)} = r (inj₂ (inj₁ b⁻)) ((inj₂ (inj₁ b⁻)) , assoc2 {e = inj₂ (inj₁ b⁻)})
-assoc2 {e = inj₂ (inj₂ c⁺)} = r (inj₂ (inj₂ c⁺)) ((inj₁ (inj₂ c⁺)) , assoc2 {e = inj₂ (inj₂ c⁺)})
+assoc : ∀ {ℓ} {A B B' C' : Set ℓ} → R ((A + C') + (B' + B)) ((A + B') + (B + C'))
+assoc = r λ { (inl (inl a)) → (inl (inl a)) , assoc
+            ; (inl (inr b)) → (inr (inr b)) , assoc
+            ; (inr (inl a)) → (inl (inr a)) , assoc
+            ; (inr (inr b)) → (inr (inl b)) , assoc
+            }
 
-_>>>_ : ∀ {ℓ} {A B C D E F : Set ℓ} {af : A ⊎ F} {e : ((A ⊎ F) ⊎ (D ⊎ C))} {e2 : ((B ⊎ C) ⊎ (D ⊎ E))}
-      → G A B C D → G C D E F → G A B E F
-_>>>_ {af = af} {e = e} {e2 = e2} (g f') (g g') = g (trace {a = af} (assoc {e = e} >> f' ** g' >> assoc2 {e = e2}))
+{-# NON_TERMINATING #-}
+assoc' : ∀ {ℓ} {A' B B' C : Set ℓ} → R ((A' + B) + (B' + C)) ((A' + C) + (B' + B))
+assoc' = r λ { (inl (inl a)) → (inl (inl a)) , assoc'
+             ; (inl (inr b)) → (inr (inr b)) , assoc'
+             ; (inr (inl a)) → (inr (inl a)) , assoc'
+             ; (inr (inr b)) → (inl (inr b)) , assoc'
+             }
 
 infixl 4 _>>>_
+_>>>_ : ∀ {ℓ} {A B C D E F : Set ℓ} → G A B C D → G C D E F → G A B E F
+g f' >>> g g' = g (trace (assoc >> f' ** g' >> assoc'))
 
 {-# NON_TERMINATING #-}
-β : ∀ {ℓ} {A B C D : Set ℓ} {e : (A ⊎ B) ⊎ (C ⊎ D)} → R ((A ⊎ B) ⊎ (C ⊎ D)) ((A ⊎ C) ⊎ (B ⊎ D))
-β {e = inj₁ (inj₁ a)} = r (inj₁ (inj₁ a)) ((inj₁ (inj₁ a)) , β {e = inj₁ (inj₁ a)})
-β {e = inj₁ (inj₂ b)} = r (inj₁ (inj₂ b)) ((inj₂ (inj₁ b)) , β {e = inj₁ (inj₂ b)})
-β {e = inj₂ (inj₁ c)} = r (inj₂ (inj₁ c)) ((inj₁ (inj₂ c)) , β {e = inj₂ (inj₁ c)})
-β {e = inj₂ (inj₂ d)} = r (inj₂ (inj₂ d)) ((inj₂ (inj₂ d)) , β {e = inj₂ (inj₂ d)})
+β : ∀ {ℓ} {A B C D : Set ℓ} → R ((A + B) + (C + D)) ((A + C) + (B + D))
+β = r λ { (inl (inl a)) → (inl (inl a)) , β
+        ; (inl (inr b)) → (inr (inl b)) , β
+        ; (inr (inl a)) → (inl (inr a)) , β
+        ; (inr (inr b)) → (inr (inr b)) , β
+        }
 
 {-# NON_TERMINATING #-}
-β' : ∀ {ℓ} {A B C D : Set ℓ} {e : (A ⊎ C) ⊎ (B ⊎ D)} → R ((A ⊎ C) ⊎ (B ⊎ D)) ((A ⊎ B) ⊎ (C ⊎ D))
-β' {e = inj₁ (inj₁ a)} = r (inj₁ (inj₁ a)) ((inj₁ (inj₁ a)) , β' {e = inj₁ (inj₁ a)})
-β' {e = inj₁ (inj₂ c)} = r (inj₁ (inj₂ c)) ((inj₂ (inj₁ c)) , β' {e = inj₁ (inj₂ c)})
-β' {e = inj₂ (inj₁ b)} = r (inj₂ (inj₁ b)) ((inj₁ (inj₂ b)) , β' {e = inj₂ (inj₁ b)})
-β' {e = inj₂ (inj₂ d)} = r (inj₂ (inj₂ d)) ((inj₂ (inj₂ d)) , β' {e = inj₂ (inj₂ d)})
+β' : ∀ {ℓ} {A B C D : Set ℓ} → R ((A + C) + (B + D)) ((A + B) + (C + D))
+β' = r λ { (inl (inl a)) → (inl (inl a)) , β'
+         ; (inl (inr b)) → (inr (inl b)) , β'
+         ; (inr (inl a)) → (inl (inr a)) , β'
+         ; (inr (inr b)) → (inr (inr b)) , β'
+         }
 
-_+_ : ∀ {ℓ} {A' B' C' D' E' F' G' H' : Set ℓ} {e : (A' ⊎ E') ⊎ (D' ⊎ H')} {e' : (B' ⊎ C') ⊎ (F' ⊎ G')}
-    → G A' B' C' D' → G E' F' G' H' → G (A' ⊎ E') (B' ⊎ F') (C' ⊎ G') (D' ⊎ H')
-_+_ {e = e} {e' = e'} (g f') (g g') = g (β {e = e} >> f' ** g' >> β' {e = e'})
-
-infixl 3 _+_
-
-{-# NON_TERMINATING #-}
-dual : ∀ {ℓ} {A B C D : Set ℓ} {e : A ⊎ D} → R (A ⊎ D) (B ⊎ C) → R (D ⊎ A) (C ⊎ B)
-dual {e = e} f' with R-elim f'
-dual {e = inj₁ x} f' | f with f (inj₁ x)
-... | inj₁ x₁ , proj₂ = r (inj₂ x) ((inj₂ x₁) , (dual {e = inj₁ x} f'))
-... | inj₂ y , proj₂ = r (inj₂ x) ((inj₁ y) , (dual {e = inj₁ x} f'))
-dual {e = inj₂ y} f' | f with f (inj₂ y)
-... | inj₁ x , proj₂ = r (inj₁ y) ((inj₂ x) , (dual {e = inj₂ y} f'))
-... | inj₂ y₁ , proj₂ = r (inj₁ y) ((inj₁ y₁) , (dual {e = inj₂ y} f'))
-
-dualize : ∀ {ℓ} {A B C D : Set ℓ} {e : A ⊎ D} → G A B C D → G D C B A
-dualize {e = e} (g f') = g (dual {e = e} f')
+infixl 3 _++_
+_++_ : ∀ {ℓ} {A' B' C' D' E' F' G' H' : Set ℓ}
+     → G A' B' C' D' → G E' F' G' H' → G (A' + E') (B' + F') (C' + G') (D' + H')
+g f' ++ g g' = g (β >> f' ** g' >> β')
 
 {-# NON_TERMINATING #-}
-R-curry : ∀ {ℓ} {A B C D E F : Set ℓ} {e : (A ⊎ B) ⊎ F}
-        → R ((A ⊎ B) ⊎ F) ((C ⊎ D) ⊎ E) → R (A ⊎ (B ⊎ F)) (C ⊎ (D ⊎ E))
-R-curry {e = e} f' with R-elim f'
-R-curry {e = inj₁ (inj₁ x)} f' | f with f (inj₁ (inj₁ x))
-... | inj₁ (inj₁ x₁) , proj₂ = r (inj₁ x) ((inj₁ x₁) , R-curry {e = inj₁ (inj₁ x)} f')
-... | inj₁ (inj₂ y) , proj₂ = r (inj₁ x) ((inj₂ (inj₁ y)) , (R-curry {e = inj₁ (inj₁ x)} f'))
-... | inj₂ y , proj₂ = r (inj₁ x) ((inj₂ (inj₂ y)) , (R-curry {e = inj₁ (inj₁ x)} f'))
-R-curry {e = inj₁ (inj₂ y)} f' | f with f (inj₁ (inj₂ y))
-... | inj₁ (inj₁ x) , proj₂ = r (inj₂ (inj₁ y)) ((inj₁ x) , (R-curry {e = inj₁ (inj₂ y)} f'))
-... | inj₁ (inj₂ y₁) , proj₂ = r (inj₂ (inj₁ y)) ((inj₂ (inj₁ y₁)) , (R-curry {e = inj₁ (inj₂ y)} f'))
-... | inj₂ y₁ , proj₂ = r (inj₂ (inj₁ y)) ((inj₂ (inj₂ y₁)) , (R-curry {e = inj₁ (inj₂ y)} f'))
-R-curry {e = inj₂ y} f' | f with f (inj₂ y)
-... | inj₁ (inj₁ x) , proj₂ = r (inj₂ (inj₂ y)) ((inj₁ x) , (R-curry {e = inj₂ y} f'))
-... | inj₁ (inj₂ y₁) , proj₂ = r (inj₂ (inj₂ y)) ((inj₂ (inj₁ y₁)) , (R-curry {e = inj₂ y} f'))
-... | inj₂ y₁ , proj₂ = r (inj₂ (inj₂ y)) ((inj₂ (inj₂ y₁)) , (R-curry {e = inj₂ y} f'))
+dual : ∀ {ℓ} {A B C D : Set ℓ} → R (A + D) (B + C) → R (D + A) (C + B)
+dual f = r λ { (inl d) → (+-swap (fst (R-elim f (inr d)))) , (dual f)
+             ; (inr a) → (+-swap (fst (R-elim f (inl a)))) , (dual f)
+             }
 
-G-curry : ∀ {ℓ} {A B C D E F : Set ℓ} {e : (A ⊎ B) ⊎ F}
-        → G (A ⊎ B) (C ⊎ D) E F → G A C (D ⊎ E) (B ⊎ F)
-G-curry {e = e} (g f) = g (R-curry {e = e} f)
+dualize : ∀ {ℓ} {A B C D : Set ℓ} → G A B C D → G D C B A
+dualize (g f) = g (dual f)
+
+{-# NON_TERMINATING #-}
+R-curry : ∀ {ℓ} {A B C D E F : Set ℓ}
+        → R ((A + B) + F) ((C + D) + E) → R (A + (B + F)) (C + (D + E))
+R-curry f' = r λ { (inl a) → +-assoc-l (fst (R-elim f' (inl (inl a)))) , R-curry f'
+                 ; (inr (inl b)) → (+-assoc-l (fst (R-elim f' (inl (inr b))))) , (R-curry f')
+                 ; (inr (inr f)) → (+-assoc-l (fst (R-elim f' (inr f)))) , (R-curry f')
+                 }
+
+G-curry : ∀ {ℓ} {A B C D E F : Set ℓ}
+        → G (A + B) (C + D) E F → G A C (D + E) (B + F)
+G-curry (g f) = g (R-curry f)
+
+{-# NON_TERMINATING #-}
+R-uncurry : ∀ {ℓ} {A B C D E F : Set ℓ}
+          → R (A + (B + F)) (C + (D + E)) → R ((A + B) + F) ((C + D) + E)
+R-uncurry f' = r λ { (inl (inl a)) → (+-assoc-r (fst (R-elim f' (inl a)))) , (R-uncurry f')
+                   ; (inl (inr b)) → (+-assoc-r (fst (R-elim f' (inr (inl b))))) , (R-uncurry f')
+                   ; (inr f) → (+-assoc-r (fst (R-elim f' (inr (inr f))))) , (R-uncurry f')
+                   }
+
+G-uncurry : ∀ {ℓ} {A B C D E F : Set ℓ}
+          → G A C (D + E) (B + F) → G (A + B) (C + D) E F
+G-uncurry (g f) = g (R-uncurry f)
