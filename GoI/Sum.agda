@@ -1,60 +1,10 @@
 module GoI.Sum where
 
-open import Level
-
-open import Data.Unit
-open import Data.Empty
-
-infixr 4 _,_
-infixr 2 _×_
-
-record Σ {a b} (A : Set a) (B : A → Set b) : Set (a ⊔ b) where
-  constructor _,_
-  field
-    fst : A
-    snd : B fst
-
-open Σ public
-
-infix 2 Σ-syntax
-
-Σ-syntax : ∀ {a b} (A : Set a) → (A → Set b) → Set (a ⊔ b)
-Σ-syntax = Σ
-
-syntax Σ-syntax A (λ x → B) = Σ[ x ∈ A ] B
-
-_×_ : ∀ {a b} (A : Set a) (B : Set b) → Set (a ⊔ b)
-A × B = Σ[ x ∈ A ] B
-
-×-swap : ∀ {a b} {A : Set a} {B : Set b} → A × B → B × A
-×-swap (fst , snd) = snd , fst
-
-infix 5 _+_
-
-data _+_ {a b} (A : Set a) (B : Set b) : Set (a ⊔ b) where
-     inl : (a : A) → A + B
-     inr : (b : B) → A + B
-
-+-swap : ∀ {a b} {A : Set a} {B : Set b} → A + B → B + A
-+-swap (inl a) = inr a
-+-swap (inr b) = inl b
-
-+-assoc-l : ∀ {a b c} {A : Set a} {B : Set b} { C : Set c}
-          → (A + B) + C → A + (B + C)
-+-assoc-l (inl (inl a)) = inl a
-+-assoc-l (inl (inr b)) = inr (inl b)
-+-assoc-l (inr c) = inr (inr c)
-
-+-assoc-r : ∀ {a b c} {A : Set a} {B : Set b} { C : Set c}
-          → A + (B + C) → (A + B) + C
-+-assoc-r (inl a) = inl (inl a)
-+-assoc-r (inr (inl b)) = inl (inr b)
-+-assoc-r (inr (inr c)) = inr c
+open import GoI.Types
 
 data R {ℓ} (i : Set ℓ) : Set ℓ → Set (suc ℓ) where
      idᵣ : R i i
      r  : {o : Set ℓ} → (i → (o × R i o)) → R i o
-     -- r' : {o : Set ℓ} → (o → (i × R o i)) → R i o
 
 R-elim : ∀ {ℓ} {i o : Set ℓ} → R i o → i → (o × R i o)
 R-elim idᵣ x = x , idᵣ
@@ -63,13 +13,13 @@ R-elim (r f) v = f v
 id-R : ∀ {ℓ} {A : Set ℓ} → R A A
 id-R {ℓ} {A} = idᵣ
 
+infixl 5 _>>_
 _>>_ : ∀ {ℓ} {A B C : Set ℓ} → R A B → R B C → R A C
 f >> idᵣ = f
 idᵣ >> g = g
 r f >> r g = r (λ a → fst (g (fst (f a))) , snd (f a) >> snd (g (fst (f a))))
 
-infixl 5 _>>_
-
+infixl 6 _**_
 {-# NON_TERMINATING #-}
 _**_ : ∀ {ℓ₁ ℓ₂} {A B : Set ℓ₁} {C D : Set ℓ₂} → R A B → R C D → R (A + C) (B + D)
 idᵣ ** idᵣ = idᵣ
@@ -82,7 +32,6 @@ r f ** idᵣ = r λ { (inl a) → (inl (fst (f a))) , ((snd (f a)) ** idᵣ)
 r f ** r g = r λ { (inl a) → (inl (fst (f a))) , ((snd (f a)) ** (r g))
                  ; (inr c) → (inr (fst (g c))) , ((r f) ** (snd (g c)))
                  }
-infixl 6 _**_
 
 trace : ∀ {ℓ} {A B C : Set ℓ} → R (A + B) (C + B) → R A C
 {-# NON_TERMINATING #-}
