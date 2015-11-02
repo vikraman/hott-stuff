@@ -1,4 +1,4 @@
-module GoI where
+module GoI.Sum where
 
 open import Level
 
