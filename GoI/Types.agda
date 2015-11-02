@@ -2,7 +2,12 @@ module GoI.Types where
 
 open import Level public
 
-infix 5 _+_
+data ⊥ : Set where
+
+⊥-elim : ∀ {ℓ} {A : Set ℓ} → ⊥ → A
+⊥-elim ()
+
+infixr 5 _+_
 
 data _+_ {a b} (A : Set a) (B : Set b) : Set (a ⊔ b) where
      inl : (a : A) → A + B
@@ -57,7 +62,22 @@ A × B = Σ[ x ∈ A ] B
           → A × (B × C) → (A × B) × C
 ×-assoc-r (a , (b , c)) = (a , b) , c
 
-data ⊥ : Set where
+distrib-ll : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c}
+           → (C × A) + (C × B) → C × (A + B)
+distrib-ll (inl (c , a)) = c , inl a
+distrib-ll (inr (c , b)) = c , inr b
 
-⊥-elim : ∀ {ℓ} {A : Set ℓ} → ⊥ → A
-⊥-elim ()
+distrib-lr : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c}
+           → C × (A + B) → (C × A) + (C × B)
+distrib-lr (c , inl a) = inl (c , a)
+distrib-lr (c , inr b) = inr (c , b)
+
+distrib-rl : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c}
+           → (A × C) + (B × C) → (A + B) × C
+distrib-rl (inl (a , c)) = inl a , c
+distrib-rl (inr (b , c)) = inr b , c
+
+distrib-rr : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c}
+           → (A + B) × C → (A × C) + (B × C)
+distrib-rr (inl a , c) = inl (a , c)
+distrib-rr (inr b , c) = inr (b , c)
