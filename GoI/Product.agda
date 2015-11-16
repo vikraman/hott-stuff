@@ -5,39 +5,57 @@ open import GoI.Base
 infixl 6 _***_
 _***_ : ∀ {ℓ₁ ℓ₂} {A B : Set ℓ₁} {C D : Set ℓ₂} → R A B → R C D → R (A × C) (B × D)
 idᵣ *** idᵣ = idᵣ
-idᵣ *** r g = r λ { (a , c) → (a , fst (g c)) , idᵣ *** (snd (g c)) }
+idᵣ *** r f = r λ { (a , c) → (a , fst (f c)) , idᵣ *** (snd (f c)) }
 r f *** idᵣ = r λ { (a , c) → ((fst (f a)) , c) , snd (f a) *** idᵣ }
-r f *** r g = r λ { (a , c) → ((fst (f a)) , (fst (g c))) , snd (f a) *** snd (g c) }
+r f *** r f' = r λ { (a , c) → ((fst (f a)) , (fst (f' c))) , snd (f a) *** snd (f' c) }
 
 {-# NON_TERMINATING #-}
-R-sym : ∀ {ℓ} {A B : Set ℓ} → R (A × B) (B × A)
-R-sym = r λ { (a , b) → (b , a) , R-sym }
-
-data G {ℓ} (A A' B B' : Set ℓ) : Set (suc ℓ) where
-     g : R (A × B') (A' × B) → G A A' B B'
-
-G-elim : ∀ {ℓ} {A A' B B' : Set ℓ} → G A A' B B' → R (A × B') (A' × B)
-G-elim (g f) = f
-
-id-G : ∀ {ℓ} {A B : Set ℓ} → G A B A B
-id-G = g R-sym
+extend : ∀ {ℓ} {A A' B B' C : Set ℓ}
+       → R (A + B') (A' + B)
+       → R ((A + B') × C) ((A' + B) × C)
+extend f = r λ { (inl a , c) → ((fst (R-elim f (inl a))) , c) , extend f
+               ; (inr b , c) → ((fst (R-elim f (inr b))) , c) , extend f
+               }
 
 {-# NON_TERMINATING #-}
-assoc : ∀ {ℓ} {A B B' C' : Set ℓ} → R ((A × C') × (B' × B)) ((A × B') × (B × C'))
-assoc = r λ { ((a , c') , (b' , b)) → ((a , b') , (b , c')) , assoc }
+extend' : ∀ {ℓ} {A A' B B' C : Set ℓ}
+        → R (A + B') (A' + B)
+        → R (C × (A + B')) (C × (A' + B))
+extend' f = r λ { (c , inl a) → (c , (fst (R-elim f (inl a)))) , extend' f
+                ; (c , inr b) → (c , (fst (R-elim f (inr b)))) , extend' f
+                }
 
 {-# NON_TERMINATING #-}
-assoc' : ∀ {ℓ} {A' B B' C : Set ℓ} → R ((A' × B) × (B' × C)) ((A' × C) × (B' × B))
-assoc' = r λ { ((a' , b) , (b' , c)) → ((a' , c) , (b' , b)) , assoc' }
+R-extend : ∀ {ℓ} {A A' B B' C D : Set ℓ}
+         → R (A + B') (A' + B)
+         → R (((A × C) + (B × D)) + ((B' × C) + (A' × D))) (((B × C) + (A × D)) + ((A' × C) + (B' × D)))
+R-extend f = r λ { (inl (inl (a , c))) → fst (R-elim (R-extend f) (inl (inl (a , c)))) , R-extend f
+                 ; (inl (inr (b , d))) → fst (R-elim (R-extend f) (inl (inr (b , d)))) , R-extend f
+                 ; (inr (inl (b' , c))) → fst (R-elim (R-extend f) (inr (inl (b' , c)))) , R-extend f
+                 ; (inr (inr (a' , d))) → fst (R-elim (R-extend f) (inr (inr (a' , d)))) , R-extend f
+                 }
+
+G-extend : ∀ {ℓ} {A A' B B' C D : Set ℓ}
+         → G A A' B B'
+         → G ((A × C) + (B × D)) ((B × C) + (A × D)) ((A' × C) + (B' × D)) ((B' × C) + (A' × D))
+G-extend (g f) = g (R-extend f)
 
 {-# NON_TERMINATING #-}
-R-distrib-l : ∀ {ℓ} {A A' B B' C : Set ℓ} → R (A + B') (A' + B) → R (C × (A + B')) (C × (A' + B))
-R-distrib-l f = r λ { (c , inl a) → (c , (fst (R-elim f (inl a)))) , R-distrib-l f
-                    ; (c , inr b) → (c , (fst (R-elim f (inr b)))) , (R-distrib-l f)
-                    }
+R-extend' : ∀ {ℓ} {A' B' C C' D D' : Set ℓ}
+          → R (C + D') (C' + D)
+          → R (((A' × C) + (B' × D)) + ((B' × C') + (A' × D'))) (((B' × C) + (A' × D)) + ((A' × C') + (B' × D')))
+R-extend' f' = r λ { (inl (inl (a' , c))) → fst (R-elim (R-extend' f') (inl (inl (a' , c)))) , R-extend' f'
+                   ; (inl (inr (b' , d))) → fst (R-elim (R-extend' f') (inl (inr (b' , d)))) , R-extend' f'
+                   ; (inr (inl (b' , c'))) → fst (R-elim (R-extend' f') (inr (inl (b' , c')))) , R-extend' f'
+                   ; (inr (inr (a' , d'))) → fst (R-elim (R-extend' f') (inr (inr (a' , d')))) , R-extend' f'
+                   }
 
-{-# NON_TERMINATING #-}
-R-distrib-r : ∀ {ℓ} {A A' B B' C : Set ℓ} → R (A + B') (A' + B) → R ((A + B') × C) ((A' + B) × C)
-R-distrib-r f = r λ { (inl a , c) → (fst (R-elim f (inl a)) , c) , R-distrib-r f
-                    ; (inr b' , c) → (fst (R-elim f (inr b')) , c) , R-distrib-r f
-                    }
+G-extend' : ∀ {ℓ} {A' B' C C' D D' : Set ℓ}
+          → G C C' D D'
+          → G ((A' × C) + (B' × D)) ((B' × C) + (A' × D)) ((A' × C') + (B' × D')) ((B' × C') + (A' × D'))
+G-extend' (g f) = g (R-extend' f)
+
+G-combine : ∀ {ℓ} {A A' B B' C C' D D' : Set ℓ}
+          → G A A' B B' → G C C' D D'
+          → G ((A × C) + (B × D)) ((B × C) + (A × D)) ((A' × C') + (B' × D')) ((B' × C') + (A' × D'))
+G-combine g₁ g₂ = G-extend g₁ >>> G-extend' g₂

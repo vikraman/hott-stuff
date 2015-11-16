@@ -40,3 +40,38 @@ trace f = r (λ a → loop f (inl a))
 loop f v with R-elim f v
 ... | inl c , f' = c , trace f'
 ... | inr b , f' = loop f' (inr b)
+
+data G {ℓ} (A A' B B' : Set ℓ) : Set (suc ℓ) where
+     g : R (A + B') (A' + B) → G A A' B B'
+
+G-elim : ∀ {ℓ} {A A' B B' : Set ℓ} → G A A' B B' → R (A + B') (A' + B)
+G-elim (g f) = f
+
+{-# NON_TERMINATING #-}
+R-sym : ∀ {ℓ} {A B : Set ℓ} → R (A + B) (B + A)
+R-sym = r λ { (inl a) → (inr a) , R-sym
+            ; (inr b) → (inl b) , R-sym
+            }
+
+id-G : ∀ {ℓ} {A B : Set ℓ} → G A B A B
+id-G = g R-sym
+
+{-# NON_TERMINATING #-}
+assoc : ∀ {ℓ} {A B B' C' : Set ℓ} → R ((A + C') + (B' + B)) ((A + B') + (B + C'))
+assoc = r λ { (inl (inl a)) → (inl (inl a)) , assoc
+            ; (inl (inr b)) → (inr (inr b)) , assoc
+            ; (inr (inl a)) → (inl (inr a)) , assoc
+            ; (inr (inr b)) → (inr (inl b)) , assoc
+            }
+
+{-# NON_TERMINATING #-}
+assoc' : ∀ {ℓ} {A' B B' C : Set ℓ} → R ((A' + B) + (B' + C)) ((A' + C) + (B' + B))
+assoc' = r λ { (inl (inl a)) → (inl (inl a)) , assoc'
+             ; (inl (inr b)) → (inr (inr b)) , assoc'
+             ; (inr (inl a)) → (inr (inl a)) , assoc'
+             ; (inr (inr b)) → (inl (inr b)) , assoc'
+             }
+
+infixl 4 _>>>_
+_>>>_ : ∀ {ℓ} {A B C D E F : Set ℓ} → G A B C D → G C D E F → G A B E F
+g f' >>> g g' = g (trace (assoc >> f' ** g' >> assoc'))
