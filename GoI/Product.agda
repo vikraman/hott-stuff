@@ -67,11 +67,7 @@ extend' f = r λ { (c , inl a) → (c , (fst (R-elim f (inl a)))) , extend' f
 R-extend : ∀ {ℓ} {A A' B B' C D : Set ℓ}
          → R (A + B') (A' + B)
          → R (((A × C) + (B × D)) + ((B' × C) + (A' × D))) (((B × C) + (A × D)) + ((A' × C) + (B' × D)))
-R-extend f = r λ { (inl (inl (a  , c))) → fst (R-elim (distrib (extend f ** extend (R-swap f))) (inl (inl (a  , c)))) , R-extend f
-                 ; (inl (inr (b  , d))) → fst (R-elim (distrib (extend f ** extend (R-swap f))) (inl (inr (b  , d)))) , R-extend f
-                 ; (inr (inl (b' , c))) → fst (R-elim (distrib (extend f ** extend (R-swap f))) (inr (inl (b' , c)))) , R-extend f
-                 ; (inr (inr (a' , d))) → fst (R-elim (distrib (extend f ** extend (R-swap f))) (inr (inr (a' , d)))) , R-extend f
-                 }
+R-extend f = r λ e → fst (R-elim (distrib (extend f ** extend (R-swap f))) e) , R-extend f
 
 G-extend : ∀ {ℓ} {A A' B B' C D : Set ℓ}
          → G A A' B B'
@@ -82,11 +78,7 @@ G-extend (g f) = g (R-extend f)
 R-extend' : ∀ {ℓ} {A' B' C C' D D' : Set ℓ}
           → R (C + D') (C' + D)
           → R (((A' × C) + (B' × D)) + ((B' × C') + (A' × D'))) (((B' × C) + (A' × D)) + ((A' × C') + (B' × D')))
-R-extend' f = r λ { (inl (inl (a' , c ))) → fst (R-elim (distrib' (extend' f ** extend' (R-swap f))) (inl (inl (a' , c)))) , R-extend' f
-                  ; (inl (inr (b' , d ))) → fst (R-elim (distrib' (extend' f ** extend' (R-swap f))) (inl (inr (b' , d)))) , R-extend' f
-                  ; (inr (inl (b' , c'))) → fst (R-elim (distrib' (extend' f ** extend' (R-swap f))) (inr (inl (b' , c')))) , R-extend' f
-                  ; (inr (inr (a' , d'))) → fst (R-elim (distrib' (extend' f ** extend' (R-swap f))) (inr (inr (a' , d')))) , R-extend' f
-                  }
+R-extend' f = r λ e → fst (R-elim (distrib' (extend' f ** extend' (R-swap f))) e) , R-extend' f
 
 G-extend' : ∀ {ℓ} {A' B' C C' D D' : Set ℓ}
           → G C C' D D'
