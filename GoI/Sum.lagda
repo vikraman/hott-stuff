@@ -1,3 +1,4 @@
+\begin{code}
 module GoI.Sum where
 
 open import GoI.Base
@@ -89,3 +90,4 @@ R-uncurry f' = r λ { (inl (inl a)) → (+-assoc-r (fst (R-elim f' (inl a)))) , 
 G-uncurry : ∀ {ℓ} {A B C D E F : Set ℓ}
           → G A C (D + E) (B + F) → G (A + B) (C + D) E F
 G-uncurry (g f) = g (R-uncurry f)
+\end{code}

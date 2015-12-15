@@ -1,3 +1,4 @@
+\begin{code}
 module GoI.Product where
 
 open import GoI.Base
@@ -89,3 +90,4 @@ G-combine : ∀ {ℓ} {A A' B B' C C' D D' : Set ℓ}
           → G A A' B B' → G C C' D D'
           → G ((A × C) + (B × D)) ((B × C) + (A × D)) ((A' × C') + (B' × D')) ((B' × C') + (A' × D'))
 G-combine g₁ g₂ = G-extend g₁ >>> G-extend' g₂
+\end{code}

@@ -1,3 +1,4 @@
+\begin{code}
 module GoI.Base where
 
 open import GoI.Types public
@@ -75,3 +76,4 @@ assoc' = r λ { (inl (inl a)) → (inl (inl a)) , assoc'
 infixl 4 _>>>_
 _>>>_ : ∀ {ℓ} {A B C D E F : Set ℓ} → G A B C D → G C D E F → G A B E F
 g f' >>> g g' = g (trace (assoc >> f' ** g' >> assoc'))
+\end{code}

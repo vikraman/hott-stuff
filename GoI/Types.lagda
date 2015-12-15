@@ -1,3 +1,4 @@
+\begin{code}
 module GoI.Types where
 
 open import Level public
@@ -81,3 +82,4 @@ distrib-rr : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c}
            → (A + B) × C → (A × C) + (B × C)
 distrib-rr (inl a , c) = inl (a , c)
 distrib-rr (inr b , c) = inr (b , c)
+\end{code}
