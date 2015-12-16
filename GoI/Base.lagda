@@ -6,8 +6,9 @@ open import GoI.Types public
 \end{code}
 }
 
-A ``Resumption'' takes an input and produces an output alongwith a new resumption. The type of resumptions is
-parameterized by the sets of inputs $I$ and outputs $O$. An identity resumption doesn't change the input.
+A ``Resumption''\footnote{\url{http://semantic-domain.blogspot.fr/2012/11/in-this-post-ill-show-how-to-turn.html}} takes
+an input and produces an output alongwith a new resumption. The type of resumptions is parameterized by the sets of
+inputs $I$ and outputs $O$. An identity resumption doesn't change the input.
 
 \begin{code}
 data R {ℓ} (I : Set ℓ) : Set ℓ → Set (suc ℓ) where
