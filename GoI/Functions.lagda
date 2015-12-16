@@ -13,7 +13,7 @@ Morphisms in \G\ correspond to cut elimination in CMLL(Compact Multiplicative Li
   (A^+, A^-) \multimap (B^+,B^-) = (A^+, A^-) \tensor (B^+, B^-)
 \]
 
-This means higher order functions in linear logic can be encoded as compositions of resumptions.
+This means higher order functions can be encoded as compositions of resumptions.
 
 \[
   (A \multimap B) \multimap C \iso A \multimap (B \multimap C)

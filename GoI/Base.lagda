@@ -6,8 +6,8 @@ open import GoI.Types public
 \end{code}
 }
 
-A Resumption takes an input and produces an output alongwith a new resumption. The type of resumptions is parameterized
-by the sets of inputs $I$ and outputs $O$. An identity resumption doesn't change the input.
+A ``Resumption'' takes an input and produces an output alongwith a new resumption. The type of resumptions is
+parameterized by the sets of inputs $I$ and outputs $O$. An identity resumption doesn't change the input.
 
 \begin{code}
 data R {ℓ} (I : Set ℓ) : Set ℓ → Set (suc ℓ) where
@@ -15,7 +15,7 @@ data R {ℓ} (I : Set ℓ) : Set ℓ → Set (suc ℓ) where
      r  : {O : Set ℓ} → (I → (O × R I O)) → R I O
 \end{code}
 
-We also need an elimination form to assist Agda.
+We also need an explicit elimination form as a helper.
 
 \begin{code}
 R-elim : ∀ {ℓ} {I O : Set ℓ} → R I O → I → (O × R I O)
@@ -53,8 +53,9 @@ structure on \R.
 \begin{gather*}
   \unit = \bot \in Set\;\ell \\
   A \tensor B = A + B \\
-  A \tensor \bot \equiv A \equiv \bot \tensor A \\
-  (A \tensor B) \tensor C \equiv A \tensor (B \tensor C) \\
+  A \tensor B \iso B \tensor A \\
+  A \tensor \bot \iso A \iso \bot \tensor A \\
+  (A \tensor B) \tensor C \iso A \tensor (B \tensor C) \\
 \end{gather*}
 
 \AgdaHide{
@@ -191,7 +192,7 @@ and the braiding.
 We can also define the feedback or trace operator.
 
 \[
-  Tr(A, C) : \R(A \tensor B, C \tensor B) \to \R(A, C)
+  Tr(A, B) : \R(A \tensor C, B \tensor C) \to \R(A, B)
 \]
 
 \AgdaHide{
@@ -200,12 +201,12 @@ We can also define the feedback or trace operator.
 \end{code}
 }
 \begin{code}
-trace : ∀ {ℓ} {A B C : Set ℓ} → R (A + B) (C + B) → R A C
-loop : ∀ {ℓ} {A B C : Set ℓ} → R (A + B) (C + B) → A + B → C × R A C
+trace : ∀ {ℓ} {A B C : Set ℓ} → R (A + C) (B + C) → R A B
+loop : ∀ {ℓ} {A B C : Set ℓ} → R (A + C) (B + C) → A + C → B × R A B
 trace f = r (λ a → loop f (inl a))
 loop f v with R-elim f v
-... | inl c , f' = c , trace f'
-... | inr b , f' = loop f' (inr b)
+... | inl b , f' = b , trace f'
+... | inr c , f' = loop f' (inr c)
 \end{code}
 
 This makes \R\ a symmetric monoidal category with trace.

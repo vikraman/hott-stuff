@@ -6,7 +6,7 @@ open import Level public
 \end{code}
 }
 
-The bottom, or \zero\ type.
+We start by defining the empty, or \zero\ type,
 
 \begin{code}
 data ⊥ : Set where
@@ -15,7 +15,7 @@ data ⊥ : Set where
 ⊥-elim ()
 \end{code}
 
-The sum type.
+the sum type,
 
 \AgdaHide{
 \begin{code}
@@ -27,27 +27,8 @@ data _+_ {a b} (A : Set a) (B : Set b) : Set (a ⊔ b) where
      inl : (a : A) → A + B
      inr : (b : B) → A + B
 \end{code}
-\AgdaHide{
-\begin{code}
-+-swap : ∀ {a b} {A : Set a} {B : Set b} → A + B → B + A
-+-swap (inl a) = inr a
-+-swap (inr b) = inl b
 
-+-assoc-l : ∀ {a b c} {A : Set a} {B : Set b} { C : Set c}
-          → (A + B) + C → A + (B + C)
-+-assoc-l (inl (inl a)) = inl a
-+-assoc-l (inl (inr b)) = inr (inl b)
-+-assoc-l (inr c) = inr (inr c)
-
-+-assoc-r : ∀ {a b c} {A : Set a} {B : Set b} { C : Set c}
-          → A + (B + C) → (A + B) + C
-+-assoc-r (inl a) = inl (inl a)
-+-assoc-r (inr (inl b)) = inl (inr b)
-+-assoc-r (inr (inr c)) = inr c
-\end{code}
-}
-
-The product type in terms of the dependent sum type.
+and the product type in terms of the dependent sum type.
 
 \AgdaHide{
 \begin{code}
@@ -79,6 +60,27 @@ infixr 2 _×_
 _×_ : ∀ {a b} (A : Set a) (B : Set b) → Set (a ⊔ b)
 A × B = Σ[ x ∈ A ] B
 \end{code}
+
+\AgdaHide{
+\begin{code}
++-swap : ∀ {a b} {A : Set a} {B : Set b} → A + B → B + A
++-swap (inl a) = inr a
++-swap (inr b) = inl b
+
++-assoc-l : ∀ {a b c} {A : Set a} {B : Set b} { C : Set c}
+          → (A + B) + C → A + (B + C)
++-assoc-l (inl (inl a)) = inl a
++-assoc-l (inl (inr b)) = inr (inl b)
++-assoc-l (inr c) = inr (inr c)
+
++-assoc-r : ∀ {a b c} {A : Set a} {B : Set b} { C : Set c}
+          → A + (B + C) → (A + B) + C
++-assoc-r (inl a) = inl (inl a)
++-assoc-r (inr (inl b)) = inl (inr b)
++-assoc-r (inr (inr c)) = inr c
+\end{code}
+}
+
 \AgdaHide{
 \begin{code}
 ×-swap : ∀ {a b} {A : Set a} {B : Set b} → A × B → B × A
