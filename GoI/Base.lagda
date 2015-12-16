@@ -312,9 +312,7 @@ Also, every object in \G\ has a dual object.
 }
 \begin{code}
 dual : ∀ {ℓ} {A B C D : Set ℓ} → R (A + D) (B + C) → R (D + A) (C + B)
-dual f = r λ { (inl d) → (+-swap (fst (R-elim f (inr d)))) , (dual f)
-             ; (inr a) → (+-swap (fst (R-elim f (inl a)))) , (dual f)
-             }
+dual f = r λ e → +-swap (fst (R-elim f (+-swap e))) , dual f
 
 dualize : ∀ {ℓ} {A B C D : Set ℓ} → G A B C D → G D C B A
 dualize (g f) = g (dual f)
