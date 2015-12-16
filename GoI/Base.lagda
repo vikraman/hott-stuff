@@ -211,7 +211,8 @@ loop f v with R-elim f v
 This makes \R\ a symmetric monoidal category with trace.
 
 We can now define a new category \G\ such that, the objects of \G\ are pairs $(A^+,A^-)$ of objects from \R\, and a
-morphism $f: (A^+,A^-) \to (B^+,B^-)$ in \G\ is a morphism $f: A^+ \times B^- \to A^- \times B^+$ in \R.
+morphism $\G(A^+,A^-,B^+,B^-): (A^+,A^-) \to (B^+,B^-)$ in \G\ is a morphism
+$R(A^+ \tensor B^-, A^- \tensor B^+): A^+ \tensor B^- \to A^- \tensor B^+$ in \R.
 
 \begin{code}
 data G {ℓ} (A A' B B' : Set ℓ) : Set (suc ℓ) where
