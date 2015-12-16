@@ -1,6 +1,6 @@
 \AgdaHide{
 \begin{code}
-module GoI.Sum where
+module GoI.Functions where
 
 open import GoI.Base
 \end{code}
