@@ -78,7 +78,7 @@ r f ** r g = r λ { (inl a) → (inl (fst (f a))) , ((snd (f a)) ** (r g))
                  }
 \end{code}
 
-The following are the natural isomorphisms, the right unitor,
+The following are the natural isomorphisms, namely, the right unitor,
 \[
   \rho_A : A \tensor \unit \iso A
 \]
@@ -177,6 +177,7 @@ and the braiding.
         ; (inr b) → (inl b) , β
         }
 \end{code}
+
 \AgdaHide{
 \begin{code}
 {-# NON_TERMINATING #-}
@@ -200,6 +201,7 @@ We can also define the feedback or trace operator.
 {-# NON_TERMINATING #-}
 \end{code}
 }
+
 \begin{code}
 trace : ∀ {ℓ} {A B C : Set ℓ} → R (A + C) (B + C) → R A B
 loop : ∀ {ℓ} {A B C : Set ℓ} → R (A + C) (B + C) → A + C → B × R A B
@@ -209,11 +211,16 @@ loop f v with R-elim f v
 ... | inr c , f' = loop f' (inr c)
 \end{code}
 
-This makes \R\ a symmetric monoidal category with trace.
+This makes \R\ a symmetric monoidal category with
+trace\footnote{\url{https://ncatlab.org/nlab/show/symmetric+monoidal+category}}.
 
 We can now define a new category \G\ such that, the objects of \G\ are pairs $(A^+,A^-)$ of objects from \R\, and a
-morphism $\G(A^+,A^-,B^+,B^-): (A^+,A^-) \to (B^+,B^-)$ in \G\ is a morphism $\R(A^+ \tensor B^-, A^- \tensor B^+): A^+
-\tensor B^- \to A^- \tensor B^+ \times \R(A^+ \tensor B^-, A^- \tensor B^+)$ in \R.
+morphism $\G(A^+,A^-,B^+,B^-)$ in \G\ is a morphism $\R(A^+ \tensor B^-, A^- \tensor B^+)$ in \R.
+
+\begin{align*}
+  \G(A^+,A^-,B^+,B^-) &: (A^+,A^-) \to (B^+,B^-) \\
+  \R(A^+ \tensor B^-, A^- \tensor B^+) &: A^+ \tensor B^- \to A^- \tensor B^+ \times \R(A^+ \tensor B^-, A^- \tensor B^+)
+\end{align*}
 
 \begin{code}
 data G {ℓ} (A A' B B' : Set ℓ) : Set (suc ℓ) where
@@ -225,6 +232,9 @@ The identity object in \G\ is the symmetry isomorphism in \R.
 \begin{code}
 id-G : ∀ {ℓ} {A B : Set ℓ} → G A B A B
 id-G = g β
+
+id*-G : ∀ {ℓ} {A B : Set ℓ} → G B A B A
+id*-G = g β'
 \end{code}
 
 Composition of isomorphisms in \G\ can be defined using trace in \R.
@@ -304,7 +314,7 @@ _++_ : ∀ {ℓ} {A' B' C' D' E' F' G' H' : Set ℓ}
 g f' ++ g g' = g (γ >> f' ** g' >> γ')
 \end{code}
 
-Also, every object in \G\ has a dual object.
+Also, every object $A$ in \G\ has a dual object $A^*$.
 
 \AgdaHide{
 \begin{code}
@@ -319,4 +329,4 @@ dualize : ∀ {ℓ} {A B C D : Set ℓ} → G A B C D → G D C B A
 dualize (g f) = g (dual f)
 \end{code}
 
-This makes \G\ a compact closed category.
+This makes \G\ a compact closed category\footnote{\url{https://ncatlab.org/nlab/show/compact+closed+category}}.

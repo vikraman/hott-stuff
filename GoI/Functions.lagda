@@ -6,8 +6,9 @@ open import GoI.Base
 \end{code}
 }
 
-Morphisms in \G\ correspond to cut elimination in CMLL(Compact Multiplicative Linear Logic) which is equivalent to MLL
-(Multiplicative Linear Logic) with \tensor\ and $A \multimap B = A^\bot \parr B$ such that,
+Morphisms in \G\ correspond to cut elimination in CMLL(Compact Multiplicative Linear Logic) \footnote{A Sequent Calculus
+  for Compact Closed Categories (1996), Masaru Shirahata} which is equivalent to MLL (Multiplicative Linear Logic) with
+\tensor\ and $A \multimap B = A^\bot \parr B$ such that,
 
 \[
   (A^+, A^-) \multimap (B^+,B^-) = (A^+, A^-) \tensor (B^+, B^-)
