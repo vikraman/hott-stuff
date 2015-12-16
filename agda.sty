@@ -32,6 +32,7 @@
                         % so in the compilation output.
     \setmainfont[Ligatures=TeX]{texgyrepagella-regular.otf}
     \setmathfont{Asana-Math.otf}
+    \setmathfont[range={\mathcal,\mathbfcal},StylisticSet=1]{XITS Math}
 
     \providecommand{\DeclareUnicodeCharacter}[2]{\relax}
 
@@ -331,8 +332,8 @@
 % ----------------------------------------------------------------------
 % The code environment.
 
-\newcommand{\AgdaCodeStyle}{}
-% \newcommand{\AgdaCodeStyle}{\tiny}
+% \newcommand{\AgdaCodeStyle}{}
+\newcommand{\AgdaCodeStyle}{\ttfamily\scriptsize}
 
 \ifdefined\mathindent
   {}
@@ -341,9 +342,11 @@
 \fi
 
 \newenvironment{code}%
-{\noindent\ignorespaces\advance\leftskip\mathindent\AgdaCodeStyle\pboxed}%
+{\par\addvspace{\medskipamount}
+  \noindent\ignorespaces\advance\leftskip\mathindent\AgdaCodeStyle\pboxed}%
 {\endpboxed\par\noindent%
-\ignorespacesafterend}
+  \ignorespacesafterend%
+  \par\addvspace{\medskipamount}}
 
 % Default column for polytable.
 \defaultcolumn{@{~}l@{~}}
