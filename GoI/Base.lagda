@@ -7,18 +7,22 @@ open import GoI.Types public
 }
 
 A Resumption takes an input and produces an output alongwith a new resumption. The type of resumptions is parameterized
-by the sets of inputs $i$ and outputs $o$. An identity resumption doesn't change the input. We also need an elimination
-form to assist Agda.
+by the sets of inputs $I$ and outputs $O$. An identity resumption doesn't change the input.
 
 \begin{code}
-data R {ℓ} (i : Set ℓ) : Set ℓ → Set (suc ℓ) where
-     idᵣ : R i i
-     r  : {o : Set ℓ} → (i → (o × R i o)) → R i o
+data R {ℓ} (I : Set ℓ) : Set ℓ → Set (suc ℓ) where
+     idᵣ : R I I
+     r  : {O : Set ℓ} → (I → (O × R I O)) → R I O
+\end{code}
 
-R-elim : ∀ {ℓ} {i o : Set ℓ} → R i o → i → (o × R i o)
+We also need an elimination form to assist Agda.
+
+\begin{code}
+R-elim : ∀ {ℓ} {I O : Set ℓ} → R I O → I → (O × R I O)
 R-elim idᵣ x = x , idᵣ
 R-elim (r f) v = f v
 \end{code}
+
 \AgdaHide{
 \begin{code}
 id-R : ∀ {ℓ} {A : Set ℓ} → R A A
@@ -37,10 +41,21 @@ idᵣ >> g = g
 r f >> r g = r λ e → fst (g (fst (f e))) , snd (f e) >> snd (g (fst (f e)))
 \end{code}
 
-This makes \R\ a category of resumptions with $Set$s or types as objects, and resumptions as morphisms.
+This makes \R\ a category of resumptions with types ($Set\;\ell$) as objects, and resumptions as morphisms.
 
-Using the sum type $A + B$, or disjoint union of $Set$s as the tensor product and $\bot$ as the identity, we can define
-a symmetric monoidal structure on \R.
+\[
+  \R(I, O) = I \to O \times \R(I, O)
+\]
+
+Using the sum type $A + B$ as the tensor product and $\bot$ as the unit object, we can define a symmetric monoidal
+structure on \R.
+
+\begin{gather*}
+  \unit = \bot \in Set\;\ell \\
+  A \tensor B = A + B \\
+  A \tensor \bot \equiv A \equiv \bot \tensor A \\
+  (A \tensor B) \tensor C \equiv A \tensor (B \tensor C) \\
+\end{gather*}
 
 \AgdaHide{
 \begin{code}
@@ -62,23 +77,10 @@ r f ** r g = r λ { (inl a) → (inl (fst (f a))) , ((snd (f a)) ** (r g))
                  }
 \end{code}
 
-We also add the feedback operation, or trace.
-
-\AgdaHide{
-\begin{code}
-{-# NON_TERMINATING #-}
-\end{code}
-}
-\begin{code}
-trace : ∀ {ℓ} {A B C : Set ℓ} → R (A + B) (C + B) → R A C
-loop : ∀ {ℓ} {A B C : Set ℓ} → R (A + B) (C + B) → A + B → C × R A C
-trace f = r (λ a → loop f (inl a))
-loop f v with R-elim f v
-... | inl c , f' = c , trace f'
-... | inr b , f' = loop f' (inr b)
-\end{code}
-
-The following are natural isomorphisms, the right unitor,
+The following are the natural isomorphisms, the right unitor,
+\[
+  \rho_A : A \tensor \unit \iso A
+\]
 
 \AgdaHide{
 \begin{code}
@@ -100,7 +102,12 @@ The following are natural isomorphisms, the right unitor,
 ρ' : ∀ {ℓ} {A : Set ℓ} → R A (A + ⊥)
 ρ' = r λ { a → (inl a) , ρ' }
 \end{code}
+
 the left unitor,
+\[
+  \lambda_A : \unit \tensor A \iso A
+\]
+
 \AgdaHide{
 \begin{code}
 {-# NON_TERMINATING #-}
@@ -121,7 +128,12 @@ the left unitor,
 Λ' : ∀ {ℓ} {A : Set ℓ} → R A (⊥ + A)
 Λ' = r λ { a → (inr a) , Λ' }
 \end{code}
+
 the associator,
+
+\[
+  \alpha_{A,B,C} : (A \tensor B) \tensor C \iso A \tensor (B \tensor C)
+\]
 \AgdaHide{
 \begin{code}
 {-# NON_TERMINATING #-}
@@ -146,7 +158,13 @@ the associator,
          ; (inr (inr b)) → (inr b) , α'
          }
 \end{code}
+
 and the braiding.
+
+\[
+  \beta_{A,B} : A \tensor B \iso B \tensor A
+\]
+
 \AgdaHide{
 \begin{code}
 {-# NON_TERMINATING #-}
@@ -168,6 +186,26 @@ and the braiding.
 β' = r λ { (inl b) → (inr b) , β'
          ; (inr a) → (inl a) , β'
          }
+\end{code}
+
+We can also define the feedback or trace operator.
+
+\[
+  Tr(A, C) : \R(A \tensor B, C \tensor B) \to \R(A, C)
+\]
+
+\AgdaHide{
+\begin{code}
+{-# NON_TERMINATING #-}
+\end{code}
+}
+\begin{code}
+trace : ∀ {ℓ} {A B C : Set ℓ} → R (A + B) (C + B) → R A C
+loop : ∀ {ℓ} {A B C : Set ℓ} → R (A + B) (C + B) → A + B → C × R A C
+trace f = r (λ a → loop f (inl a))
+loop f v with R-elim f v
+... | inl c , f' = c , trace f'
+... | inr b , f' = loop f' (inr b)
 \end{code}
 
 This makes \R\ a symmetric monoidal category with trace.

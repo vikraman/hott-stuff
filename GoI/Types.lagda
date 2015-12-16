@@ -6,7 +6,7 @@ open import Level public
 \end{code}
 }
 
-The bottom, or $\mathbb{0}$ type.
+The bottom, or \zero\ type.
 
 \begin{code}
 data ⊥ : Set where
