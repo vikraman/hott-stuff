@@ -333,7 +333,7 @@
 % The code environment.
 
 % \newcommand{\AgdaCodeStyle}{}
-\newcommand{\AgdaCodeStyle}{\ttfamily\scriptsize}
+\newcommand{\AgdaCodeStyle}{\ttfamily\small}
 
 \ifdefined\mathindent
   {}
@@ -347,6 +347,10 @@
 {\endpboxed\par\noindent%
   \ignorespacesafterend%
   \par\addvspace{\medskipamount}}
+
+\RequirePackage{noindentafter}
+\NoIndentAfterEnv{code}
+\NoIndentAfterCmd{\]}
 
 % Default column for polytable.
 \defaultcolumn{@{~}l@{~}}

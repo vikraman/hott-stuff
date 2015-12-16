@@ -2,10 +2,16 @@
 
 \usepackage[margin=1in]{geometry}
 
+\setlength{\parindent}{4em}
+\setlength{\parskip}{1em}
+\renewcommand{\baselinestretch}{1.2}
+
 \usepackage{amsmath}
 \usepackage{cmll}
 
-\usepackage{agda}
+\usepackage{hyperref}
+\usepackage[references,links]{agda}
+\usepackage{pgffor}
 
 \newcommand{\R}{\ensuremath{\mathcal{R}}}
 \renewcommand{\G}{\ensuremath{\mathcal{G}}}
@@ -20,9 +26,21 @@
 \begin{document}
 \maketitle
 
+\section{The Int Construction}
+
 \input{GoI/Types.tex}
+
+\renewcommand{\AgdaIndent}[1]{\foreach \n in {1,...,#1}{\hspace{0.45em}}}
 \input{GoI/Base.tex}
+
+\section{Higher order functions}
+
+\renewcommand{\AgdaIndent}[1]{\foreach \n in {1,...,#1}{\hspace{0.275em}}}
 \input{GoI/Functions.tex}
+
+\section{Int Construction for products}
+
+\renewcommand{\AgdaIndent}[1]{\foreach \n in {1,...,#1}{\hspace{0.14em}}}
 \input{GoI/Product.tex}
 
 \end{document}
