@@ -12,6 +12,6 @@ report.pdf: report.tex $(TEX) agda.sty
 	latexmk -pdf -interaction=nonstopmode -e '$$pdflatex=q/xelatex %O %S/' -g report.tex
 
 clean:
-	rm -rf $(AGDAI) $(TEX) auto *.aux *.fdb_latexmk *.fls *.log *.pdf *.ptb
+	rm -rf $(AGDAI) $(TEX) auto *.aux *.fdb_latexmk *.fls *.log *.out *.pdf *.ptb
 
 .PHONY: clean
