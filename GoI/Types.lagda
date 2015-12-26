@@ -6,13 +6,15 @@ open import Level public
 \end{code}
 }
 
-We start by defining the empty, or \zero\ type,
+We start by defining the empty, or \zero\ type, and the \unit\ type.
 
 \begin{code}
-data ⊥ : Set where
+data ⊥ {ℓ} : Set ℓ where
 
-⊥-elim : ∀ {ℓ} {A : Set ℓ} → ⊥ → A
+⊥-elim : ∀ {ℓ} {A : Set ℓ} → ⊥ {ℓ} → A
 ⊥-elim ()
+
+record ⊤ {ℓ : Level} : Set ℓ where
 \end{code}
 
 the sum type,

@@ -101,7 +101,7 @@ The following are the natural isomorphisms, namely, the right unitor,
 \end{code}
 }
 \begin{code}
-ρ' : ∀ {ℓ} {A : Set ℓ} → R A (A + ⊥)
+ρ' : ∀ {ℓ} {A : Set ℓ} → R A (A + ⊥ {ℓ})
 ρ' = r λ { a → (inl a) , ρ' }
 \end{code}
 
@@ -127,7 +127,7 @@ the left unitor,
 \end{code}
 }
 \begin{code}
-Λ' : ∀ {ℓ} {A : Set ℓ} → R A (⊥ + A)
+Λ' : ∀ {ℓ} {A : Set ℓ} → R A (⊥ {ℓ} + A)
 Λ' = r λ { a → (inr a) , Λ' }
 \end{code}
 
