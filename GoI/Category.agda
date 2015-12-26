@@ -48,7 +48,7 @@ record Monoidal (o ℓ : Level) (C : Category o ℓ) : Set (o ⊔ ℓ) where
   _⊗_ : obj → obj → obj
   _⊗_ = λ a b → Fobj (a , b)
 
-record Traced (o ℓ : Level) (C : Category o ℓ) (M : Monoidal o ℓ C) : Set (o ⊔ ℓ) where
+record Traced (o ℓ : Level) {C : Category o ℓ} (M : Monoidal o ℓ C) : Set (o ⊔ ℓ) where
   private module C = Category C
   open C
   private module M = Monoidal M
@@ -56,7 +56,7 @@ record Traced (o ℓ : Level) (C : Category o ℓ) (M : Monoidal o ℓ C) : Set 
   field
     tr : ∀ {a b c : obj} → hom (a ⊗ c) (b ⊗ c) → hom a b
 
-record Compact (o ℓ : Level) (C : Category o ℓ) (M : Monoidal o ℓ C) : Set (o ⊔ ℓ) where
+record Compact (o ℓ : Level) {C : Category o ℓ} (M : Monoidal o ℓ C) : Set (o ⊔ ℓ) where
   private module C = Category C
   open C
   private module M = Monoidal M
@@ -79,7 +79,7 @@ record Compact (o ℓ : Level) (C : Category o ℓ) (M : Monoidal o ℓ C) : Set
               ; 𝟙 = ⊥
               }
 
-Ⓡ-+-trace : ∀ {ℓ} → Traced (suc ℓ) (suc ℓ) Ⓡ Ⓡ-+
+Ⓡ-+-trace : ∀ {ℓ} → Traced (suc ℓ) (suc ℓ) Ⓡ-+
 Ⓡ-+-trace = record { tr = trace }
 
 Ⓡ-× : ∀ {ℓ} → Monoidal (suc ℓ) (suc ℓ) Ⓡ
@@ -103,7 +103,7 @@ record Compact (o ℓ : Level) (C : Category o ℓ) (M : Monoidal o ℓ C) : Set
               ; 𝟙 = ⊥ , ⊥
               }
 
-Ⓖ-+-compact : ∀ {ℓ} → Compact (suc ℓ) (suc ℓ) Ⓖ Ⓖ-+
+Ⓖ-+-compact : ∀ {ℓ} → Compact (suc ℓ) (suc ℓ) Ⓖ-+
 Ⓖ-+-compact = record { _* = λ { (a , a') → (a' , a) } }
 
 postulate _××_ : ∀ {ℓ} {A A' B B' C C' D D' : Set ℓ}
