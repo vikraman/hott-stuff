@@ -15,6 +15,7 @@ data ⊥ {ℓ} : Set ℓ where
 ⊥-elim ()
 
 record ⊤ {ℓ : Level} : Set ℓ where
+  constructor ⊤⊤
 \end{code}
 
 the sum type,
