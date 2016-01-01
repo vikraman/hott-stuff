@@ -106,6 +106,8 @@ record Compact (o ℓ : Level) {C : Category o ℓ} (M : Monoidal o ℓ C) : Set
 Ⓖ-+-compact : ∀ {ℓ} → Compact (suc ℓ) (suc ℓ) Ⓖ-+
 Ⓖ-+-compact = record { _* = λ { (a , a') → (a' , a) } }
 
+-- Functorial multiplication requires this morphism map
+
 postulate _××_ : ∀ {ℓ} {A A' B B' C C' D D' : Set ℓ}
                → G A A' B B' → G C C' D D'
                → G (A × C + A' × C') (A × C' + A' × C)
